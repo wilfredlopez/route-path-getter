@@ -26,7 +26,11 @@
     "node",
     "js"
   ],
-  "author": "WIlfred Lopez",
+  "author": {
+    "email": "wilfredlopez@outlook.com",
+    "name": "WIlfred Lopez",
+    "url": "https://wilfredlopez.net"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^26.0.15",
@@ -40,9 +44,7 @@
     "url": "https://github.com/wilfredlopez/route-path-getter"
   },
   "homepage": "https://github.com/wilfredlopez/route-path-getter#readme",
-  "dependencies": {
-    "tslib": "^2.0.3"
-  },
+  "dependencies": {},
   "jest": {
     "preset": "ts-jest",
     "clearMocks": true,

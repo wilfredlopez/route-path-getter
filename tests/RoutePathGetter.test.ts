@@ -1,5 +1,5 @@
 import { RoutePathGetter, RouterGetterRecord } from "../src/index";
-type RouteKeys = "home" | "profile" | "other";
+type RouteKeys = "home" | "profile" | "magic";
 
 const routes: RouterGetterRecord<RouteKeys> = {
   home: {
@@ -11,7 +11,7 @@ const routes: RouterGetterRecord<RouteKeys> = {
       id: "",
     },
   },
-  other: {
+  magic: {
     value: "/other/:id/:key",
     params: {
       id: "",
@@ -21,14 +21,30 @@ const routes: RouterGetterRecord<RouteKeys> = {
 };
 
 //Creating Instance
-const appRoutes = new RoutePathGetter<RouteKeys>(routes);
+const appRoutes = new RoutePathGetter({
+  home: {
+    value: "/",
+  },
+  profile: {
+    value: "/profile/:id",
+    params: {
+      id: "",
+    },
+  },
+  magic: {
+    value: "/other/:id/:key",
+    params: {
+      id: "",
+      key: "",
+    },
+  },
+});
 
 //Using Instance with Type Safety
 appRoutes.path("profile", { id: "1" }); // returns '/profile/1
 // appRoutes.path('profile', { ss:'' }) // TypeError: Object literal may only specify known properties, and 'ss' does not exist in type '{ id: string; }'.ts(2345);
 appRoutes.path("home"); // returns '/'
-// appRoutes.path('other'); // Argument of type '"other"' is not assignable to parameter of type 'RouteKeys'.
-
+// appRoutes.path("other"); // Argument of type '"other"' is not assignable to parameter of type 'RouteKeys'.
 describe("RouteGetterGenerator", () => {
   it("Returns the correct path", () => {
     const homePath = appRoutes.path("home");
@@ -53,17 +69,17 @@ describe("RouteGetterGenerator", () => {
     expect(Array.isArray(arr)).toBeTruthy();
   });
 
-  it.skip("doesnt thow error with empty string as param", () => {
+  it("doesnt thow error with empty string as param", () => {
     expect(() => appRoutes.path("profile", { id: "" })).not.toThrow();
   });
   it("can handle multiple params", () => {
     const id = "myid";
     const key = "mykey";
-    const other = appRoutes.path("other", { id: id, key: key });
+    const other = appRoutes.path("magic", { id: id, key: key });
     expect(other).toBe(`/other/${id}/${key}`);
   });
   it("gets the root path", () => {
-    const other = appRoutes.rootPath("other");
+    const other = appRoutes.rootPath("magic");
     expect(other).toBe("/other");
   });
 });

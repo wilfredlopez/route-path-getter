@@ -17,10 +17,10 @@ yarn add route-path-getter
 ## Example Use
 
 ```ts
-import { RoutePathGetter, RouterGetterRecord } from "../src/index";
-type RouteKeys = "home" | "profile";
+import { RoutePathGetter } from "../src/index";
 
-const routes: RouterGetterRecord<RouteKeys> = {
+//Creating Instance
+export const appRoutes = new RoutePathGetter({
   home: {
     value: "/",
   },
@@ -30,10 +30,7 @@ const routes: RouterGetterRecord<RouteKeys> = {
       id: "",
     },
   },
-};
-
-//Creating Instance
-export const appRoutes = new RoutePathGetter<RouteKeys>(routes);
+});
 
 //Using Instance with Type Safety
 appRoutes.path("home"); // returns '/'

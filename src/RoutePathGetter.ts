@@ -1,25 +1,24 @@
-import { generatePath, pathToRegexp } from ".";
+import { generatePath } from ".";
+import { pathToRegexp } from ".";
 
-export type ExtractKeys<T extends {}> = keyof T;
-export type StringKeys<T extends {}> = keyof T extends string ? keyof T : never;
+// export type ExtractKeys<T extends {}> = keyof T;
+// export type StringKeys<T extends {}> = keyof T extends string ? keyof T : never;
 
 export type RouteGetterParams<
   T extends string | number | boolean | undefined
 > = T extends undefined
   ? undefined
   : {
-      [paramName: string]: T;
+      [P in keyof T]: T;
     };
 
-interface RouteObject {
+export interface RouteObject<T extends string | number | boolean | undefined> {
   value: string;
-  params?: RouteGetterParams<any>;
+  params?: RouteGetterParams<T>;
 }
-export type RouterGetterRecord<T extends string> = {
-  [P in T]: RouteObject;
+export type RouterGetterRecord<T extends keyof any> = {
+  [P in T]: RouteObject<any> extends infer RO ? RO : RouteObject<any>;
 };
-
-// export type RouterGetterRecord<T extends string> = Record<T, RouteObject>;
 
 /**
  * Generates Type Safed Routes for React Router or any other router.
@@ -49,8 +48,9 @@ export type RouterGetterRecord<T extends string> = {
  * // appRoutes.path('other'); // Argument of type '"other"' is not assignable to parameter of type 'RouteKeys'.
  */
 export class RoutePathGetter<
-  K extends string,
-  RouteType extends RouterGetterRecord<K> = RouterGetterRecord<K>
+  RouteType extends RouterGetterRecord<keyof any> = RouterGetterRecord<
+    keyof any
+  >
 > {
   private _routes: RouteType;
   constructor(routes: RouteType) {
@@ -80,7 +80,9 @@ export class RoutePathGetter<
     return Object.assign({}, this._routes) as RouteType;
   }
 
-  private validateKey<K extends keyof RouteType>(pathKey: K): pathKey is K {
+  private validateKey<Key extends keyof RouteType>(
+    pathKey: Key
+  ): pathKey is Key {
     if (typeof this._routes[pathKey] === "undefined") {
       throw new Error(`RoutePathGetter: Invalid Key: ${pathKey}`);
     }
@@ -96,7 +98,10 @@ export class RoutePathGetter<
    * instance.path('users', {id: '122'}) // returns '/users/122'
    * instance.path('users') // returns '/users/:id'
    */
-  path<Key extends K>(key: Key, params?: RouteType[Key]["params"]) {
+  path<Key extends keyof RouteType>(
+    key: Key,
+    params?: RouteType[Key]["params"]
+  ) {
     if (params) {
       return this.pathParams(key, params);
     }
@@ -118,7 +123,9 @@ export class RoutePathGetter<
       const path = generatePath(r.value, params);
       return path;
     } catch (error) {
-      console.log(error);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("RoutePathGetter: ", error);
+      }
       return r.value;
     }
   }
@@ -128,7 +135,7 @@ export class RoutePathGetter<
   }
 
   asArray(): RouteType[] {
-    return Object.values(this._routes);
+    return Object.values(this._routes) as any;
   }
 
   isRoute(key: keyof RouteType | string): key is keyof RouteType {
