@@ -1,0 +1,58 @@
+{
+  "name": "route-path-getter",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "module": "esm/index.js",
+  "sideEffects": false,
+  "description": "Class to orginize the router paths of the application.",
+  "files": [
+    "dist/",
+    "esm/"
+  ],
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "scripts": {
+    "prepare": "npm run clean && npm run build",
+    "build:cjs": "tsc",
+    "build:es": "tsc -m esNext --outDir esm",
+    "build": "npm run build:cjs && npm run build:es",
+    "clean": "rimraf dist esm",
+    "test": "jest"
+  },
+  "keywords": [
+    "router",
+    "react",
+    "express",
+    "node",
+    "js"
+  ],
+  "author": "WIlfred Lopez",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^26.0.15",
+    "jest": "^26.6.3",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^26.4.4",
+    "typescript": "^4.0.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wilfredlopez/route-path-getter"
+  },
+  "homepage": "https://github.com/wilfredlopez/route-path-getter#readme",
+  "dependencies": {
+    "tslib": "^2.0.3"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "clearMocks": true,
+    "coverageDirectory": "coverage",
+    "testEnvironment": "node",
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.(ts|tsx)"
+    ],
+    "setupFiles": [
+      "<rootDir>/tests/setupTests.ts"
+    ]
+  }
+}
