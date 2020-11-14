@@ -1,23 +1,4 @@
-# route-path-getter
-
-Class to orginize the router paths of an application. Could be used with any Framework like Angular, React, Vue, Ionic, Express or any javascript based app.
-
-## Install
-
-```
-npm i route-path-getter
-```
-
-or
-
-```
-yarn add route-path-getter
-```
-
-## Example Use
-
-```ts
-import { RoutePathGetter } from "route-path-getter";
+import { RoutePathGetter } from "../src/index";
 
 //Creating Instance
 export const appRoutes = new RoutePathGetter({
@@ -44,4 +25,3 @@ appRoutes.path("profile", { params: { id: "1" } }); // returns '/profile/1
 
 // USING QUERIES
 appRoutes.path("profile", { params: { id: "1" }, query: "id=123" }); // returns '/profile/1?id=123
-```

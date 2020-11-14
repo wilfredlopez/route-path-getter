@@ -100,20 +100,27 @@ export class RoutePathGetter<
    */
   path<Key extends keyof RouteType>(
     key: Key,
-    params?: RouteType[Key]["params"]
+    {
+      params,
+      query,
+    }: { params?: RouteType[Key]["params"]; query?: string } = {}
   ) {
     if (params) {
-      return this.pathParams(key, params);
+      return this.pathParams(key, { params, query });
     }
 
     this.validateKey(key);
 
-    return this._routes[key].value;
+    return this.joinQuery(this._routes[key].value, query);
+  }
+
+  private joinQuery(route: string, query?: string) {
+    return query ? route + "?" + query : route;
   }
 
   pathParams<Key extends keyof RouteType>(
     pathKey: Key,
-    params: RouteType[Key]["params"]
+    { params, query }: { params: RouteType[Key]["params"]; query?: string }
   ) {
     let r = this._routes[pathKey];
 
@@ -121,12 +128,12 @@ export class RoutePathGetter<
 
     try {
       const path = generatePath(r.value, params);
-      return path;
+      return this.joinQuery(path, query);
     } catch (error) {
       if (process.env.NODE_ENV !== "production") {
         console.error("RoutePathGetter: ", error);
       }
-      return r.value;
+      return this.joinQuery(r.value, query);
     }
   }
 

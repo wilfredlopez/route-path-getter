@@ -41,7 +41,7 @@ const appRoutes = new RoutePathGetter({
 });
 
 //Using Instance with Type Safety
-appRoutes.path("profile", { id: "1" }); // returns '/profile/1
+appRoutes.path("profile", { params: { id: "1" } }); // returns '/profile/1
 // appRoutes.path('profile', { ss:'' }) // TypeError: Object literal may only specify known properties, and 'ss' does not exist in type '{ id: string; }'.ts(2345);
 appRoutes.path("home"); // returns '/'
 // appRoutes.path("other"); // Argument of type '"other"' is not assignable to parameter of type 'RouteKeys'.
@@ -56,8 +56,10 @@ describe("RouteGetterGenerator", () => {
   });
   it("returns the path with the params", () => {
     const id = "123";
-    const profileRoute = appRoutes.path("profile", { id: id });
-    const profileRouteParams = appRoutes.pathParams("profile", { id: id });
+    const profileRoute = appRoutes.path("profile", { params: { id: id } });
+    const profileRouteParams = appRoutes.pathParams("profile", {
+      params: { id: id },
+    });
     const expected = `/profile/${id}`;
     expect(profileRoute).toBe(expected);
     expect(profileRouteParams).toBe(expected);
@@ -70,16 +72,34 @@ describe("RouteGetterGenerator", () => {
   });
 
   it("doesnt thow error with empty string as param", () => {
-    expect(() => appRoutes.path("profile", { id: "" })).not.toThrow();
+    expect(() =>
+      appRoutes.path("profile", {
+        params: {
+          id: "",
+        },
+      })
+    ).not.toThrow();
   });
   it("can handle multiple params", () => {
     const id = "myid";
     const key = "mykey";
-    const other = appRoutes.path("magic", { id: id, key: key });
+    const other = appRoutes.path("magic", { params: { id: id, key: key } });
     expect(other).toBe(`/other/${id}/${key}`);
   });
   it("gets the root path", () => {
     const other = appRoutes.rootPath("magic");
     expect(other).toBe("/other");
+  });
+
+  it("accepts query parameters", () => {
+    const homequery = appRoutes.path("home", { query: "auth=123" });
+    expect(homequery).toBe("/?auth=123");
+    const id = "77";
+    const query = "auth=123";
+    const profileQuery = appRoutes.path("profile", {
+      query: query,
+      params: { id },
+    });
+    expect(profileQuery).toBe(`/profile/${id}?${query}`);
   });
 });
