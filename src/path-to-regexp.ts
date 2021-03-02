@@ -1,42 +1,39 @@
 export interface FlagOptions {
-  sensitive?: boolean | undefined;
-  strict?: boolean;
-  start?: boolean;
-  end?: boolean;
-  delimiter?: string | null;
-  delimiters?: string;
-  endsWith?: string[];
+  sensitive?: boolean | undefined
+  strict?: boolean
+  start?: boolean
+  end?: boolean
+  delimiter?: string | null
+  delimiters?: string
+  endsWith?: string[]
 }
 
 export interface TokenObject {
-  name: string | number;
-  optional: boolean;
-  repeat: boolean;
-  partial: boolean;
-  prefix: string | null;
-  delimiter: string | null;
-  pattern: RegExp | string | null;
+  name: string | number
+  optional: boolean
+  repeat: boolean
+  partial: boolean
+  prefix: string | null
+  delimiter: string | null
+  pattern: RegExp | string | null
 }
 
-export type Path = string | RegExp | Array<string | RegExp>;
-export type PathFunction = (
-  data?: Object,
-  options?: PathFunctionOptions
-) => string;
+export type Path = string | RegExp | Array<string | RegExp>
+export type PathFunction = (data?: Object, options?: PathFunctionOptions) => string
 
 export interface PathFunctionOptions {
-  pretty?: boolean;
-  encode?: (value: string, token: TokenObject) => string;
+  pretty?: boolean
+  encode?: (value: string, token: TokenObject) => string
 }
 
-export type Tokens = string | TokenObject;
+export type Tokens = string | TokenObject
 
 class PathToRegexGenerator {
   /**
    * Default configs.
    */
-  private DEFAULT_DELIMITER = "/";
-  private DEFAULT_DELIMITERS = "./";
+  private DEFAULT_DELIMITER = '/';
+  private DEFAULT_DELIMITERS = './';
 
   /**
    * The main path matching regexp utility.
@@ -47,110 +44,95 @@ class PathToRegexGenerator {
     [
       // Match escaped characters that would otherwise appear in future matches.
       // This allows the user to escape special characters that won't transform.
-      "(\\\\.)",
+      '(\\\\.)',
       // Match Express-style parameters and un-named parameters with a prefix
       // and optional suffixes. Matches appear as:
       //
       // ":test(\\d+)?" => ["test", "\d+", undefined, "?"]
       // "(\\d+)"  => [undefined, undefined, "\d+", undefined]
-      "(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?",
-    ].join("|"),
-    "g"
+      '(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?',
+    ].join('|'),
+    'g'
   );
 
   pathToRegexp(path: Path, keys?: Tokens[], options?: FlagOptions) {
     if (path instanceof RegExp) {
-      return this.regexpToRegexp(path, keys);
+      return this.regexpToRegexp(path, keys)
     }
 
     if (Array.isArray(path)) {
-      return this.arrayToRegexp(/** @type {!Array} */ path, keys, options);
+      return this.arrayToRegexp(/** @type {!Array} */ path, keys, options)
     }
 
-    return this.stringToRegexp(/** @type {string} */ path, keys, options);
+    return this.stringToRegexp(/** @type {string} */ path, keys, options)
   }
 
   tokensToRegExp(tokens: Tokens[], keys?: Tokens[], options: FlagOptions = {}) {
     //   options = options || {};
 
-    let strict = options.strict;
-    let start = options.start !== false;
-    let end = options.end !== false;
-    let delimiter = this.escapeString(
-      options.delimiter || this.DEFAULT_DELIMITER
-    );
-    let delimiters = options.delimiters || this.DEFAULT_DELIMITERS;
+    let strict = options.strict
+    let start = options.start !== false
+    let end = options.end !== false
+    let delimiter = this.escapeString(options.delimiter || this.DEFAULT_DELIMITER)
+    let delimiters = options.delimiters || this.DEFAULT_DELIMITERS
     let endsWith: string = ([] as string[])
       .concat(options.endsWith || [])
       .map(this.escapeString)
-      .concat("$")
-      .join("|");
-    let route = start ? "^" : "";
-    let isEndDelimited = tokens.length === 0;
+      .concat('$')
+      .join('|')
+    let route = start ? '^' : ''
+    let isEndDelimited = tokens.length === 0
 
     // Iterate over the tokens and create our regexp string.
     for (let i = 0; i < tokens.length; i++) {
-      let token = tokens[i];
+      let token = tokens[i]
 
-      if (typeof token === "string") {
-        route += this.escapeString(token);
-        isEndDelimited =
-          i === tokens.length - 1 &&
-          delimiters.indexOf(token[token.length - 1]) > -1;
+      if (typeof token === 'string') {
+        route += this.escapeString(token)
+        isEndDelimited = i === tokens.length - 1 && delimiters.indexOf(token[token.length - 1]) > -1
       } else {
         let capture = token.repeat
-          ? "(?:" +
-            token.pattern +
-            ")(?:" +
-            this.escapeString(token.delimiter) +
-            "(?:" +
-            token.pattern +
-            "))*"
-          : token.pattern;
+          ? '(?:' + token.pattern + ')(?:' + this.escapeString(token.delimiter) + '(?:' + token.pattern + '))*'
+          : token.pattern
 
-        if (keys) keys.push(token);
+        if (keys) keys.push(token)
 
         if (token.optional) {
           if (token.partial) {
-            route += this.escapeString(token.prefix) + "(" + capture + ")?";
+            route += this.escapeString(token.prefix) + '(' + capture + ')?'
           } else {
-            route +=
-              "(?:" + this.escapeString(token.prefix) + "(" + capture + "))?";
+            route += '(?:' + this.escapeString(token.prefix) + '(' + capture + '))?'
           }
         } else {
-          route += this.escapeString(token.prefix) + "(" + capture + ")";
+          route += this.escapeString(token.prefix) + '(' + capture + ')'
         }
       }
     }
 
     if (end) {
-      if (!strict) route += "(?:" + delimiter + ")?";
+      if (!strict) route += '(?:' + delimiter + ')?'
 
-      route += endsWith === "$" ? "$" : "(?=" + endsWith + ")";
+      route += endsWith === '$' ? '$' : '(?=' + endsWith + ')'
     } else {
-      if (!strict) route += "(?:" + delimiter + "(?=" + endsWith + "))?";
-      if (!isEndDelimited) route += "(?=" + delimiter + "|" + endsWith + ")";
+      if (!strict) route += '(?:' + delimiter + '(?=' + endsWith + '))?'
+      if (!isEndDelimited) route += '(?=' + delimiter + '|' + endsWith + ')'
     }
 
-    return new RegExp(route, this.flags(options));
+    return new RegExp(route, this.flags(options))
   }
 
   private stringToRegexp(path: string, keys?: Tokens[], options?: FlagOptions) {
-    return this.tokensToRegExp(this.parse(path, options), keys, options);
+    return this.tokensToRegExp(this.parse(path, options), keys, options)
   }
 
-  private arrayToRegexp(
-    path: (string | RegExp)[],
-    keys?: Tokens[],
-    options?: FlagOptions
-  ) {
-    const parts: string[] = [];
+  private arrayToRegexp(path: (string | RegExp)[], keys?: Tokens[], options?: FlagOptions) {
+    const parts: string[] = []
 
     for (let i = 0; i < path.length; i++) {
-      parts.push(this.pathToRegexp(path[i], keys, options).source);
+      parts.push(this.pathToRegexp(path[i], keys, options).source)
     }
 
-    return new RegExp("(?:" + parts.join("|") + ")", this.flags(options));
+    return new RegExp('(?:' + parts.join('|') + ')', this.flags(options))
   }
 
   /**
@@ -161,10 +143,10 @@ class PathToRegexGenerator {
    * @return {!RegExp}
    */
   private regexpToRegexp(path: RegExp, keys?: Tokens[]) {
-    if (!keys) return path;
+    if (!keys) return path
 
     // Use a negative lookahead to match only capturing groups.
-    const groups = path.source.match(/\((?!\?)/g);
+    const groups = path.source.match(/\((?!\?)/g)
 
     if (groups) {
       for (let i = 0; i < groups.length; i++) {
@@ -176,11 +158,11 @@ class PathToRegexGenerator {
           repeat: false,
           partial: false,
           pattern: null,
-        });
+        })
       }
     }
 
-    return path;
+    return path
   }
 
   /**
@@ -191,58 +173,57 @@ class PathToRegexGenerator {
    * @return {!Array}
    */
   parse(str: string, options: FlagOptions = {}): Tokens[] {
-    let tokens: Tokens[] = [];
-    let key = 0;
-    let index = 0;
-    let path = "";
-    let defaultDelimiter =
-      (options && options.delimiter) || this.DEFAULT_DELIMITER;
-    let delimiters = (options && options.delimiters) || this.DEFAULT_DELIMITERS;
-    let pathEscaped = false;
-    let res: RegExpExecArray | null | undefined;
+    let tokens: Tokens[] = []
+    let key = 0
+    let index = 0
+    let path = ''
+    let defaultDelimiter = (options && options.delimiter) || this.DEFAULT_DELIMITER
+    let delimiters = (options && options.delimiters) || this.DEFAULT_DELIMITERS
+    let pathEscaped = false
+    let res: RegExpExecArray | null | undefined
 
     while ((res = this.PATH_REGEXP.exec(str)) !== null) {
-      let m = res[0];
-      let escaped = res[1];
-      let offset = res.index;
-      path += str.slice(index, offset);
-      index = offset + m.length;
+      let m = res[0]
+      let escaped = res[1]
+      let offset = res.index
+      path += str.slice(index, offset)
+      index = offset + m.length
 
       // Ignore already escaped sequences.
       if (escaped) {
-        path += escaped[1];
-        pathEscaped = true;
-        continue;
+        path += escaped[1]
+        pathEscaped = true
+        continue
       }
 
-      let prev = "";
-      let next = str[index];
-      let name = res[2];
-      let capture = res[3];
-      let group = res[4];
-      let modifier = res[5];
+      let prev = ''
+      let next = str[index]
+      let name = res[2]
+      let capture = res[3]
+      let group = res[4]
+      let modifier = res[5]
 
       if (!pathEscaped && path.length) {
-        let k = path.length - 1;
+        let k = path.length - 1
 
         if (delimiters.indexOf(path[k]) > -1) {
-          prev = path[k];
-          path = path.slice(0, k);
+          prev = path[k]
+          path = path.slice(0, k)
         }
       }
 
       // Push the current path onto the tokens.
       if (path) {
-        tokens.push(path);
-        path = "";
-        pathEscaped = false;
+        tokens.push(path)
+        path = ''
+        pathEscaped = false
       }
 
-      let partial = prev !== "" && next !== undefined && next !== prev;
-      let repeat = modifier === "+" || modifier === "*";
-      let optional = modifier === "?" || modifier === "*";
-      let delimiter = prev || defaultDelimiter;
-      let pattern = capture || group;
+      let partial = prev !== '' && next !== undefined && next !== prev
+      let repeat = modifier === '+' || modifier === '*'
+      let optional = modifier === '?' || modifier === '*'
+      let delimiter = prev || defaultDelimiter
+      let pattern = capture || group
 
       tokens.push({
         name: name || key++,
@@ -251,18 +232,16 @@ class PathToRegexGenerator {
         optional: optional,
         repeat: repeat,
         partial: partial,
-        pattern: pattern
-          ? this.escapeGroup(pattern)
-          : "[^" + this.escapeString(delimiter) + "]+?",
-      });
+        pattern: pattern ? this.escapeGroup(pattern) : '[^' + this.escapeString(delimiter) + ']+?',
+      })
     }
 
     // Push any remaining characters.
     if (path || index < str.length) {
-      tokens.push(path + str.substr(index));
+      tokens.push(path + str.substr(index))
     }
 
-    return tokens;
+    return tokens
   }
 
   /**
@@ -273,7 +252,7 @@ class PathToRegexGenerator {
    * @return {!function(Object=, Object=)}
    */
   compile(str: string, options?: FlagOptions) {
-    return this.tokensToFunction(this.parse(str, options));
+    return this.tokensToFunction(this.parse(str, options))
   }
 
   /**
@@ -281,105 +260,80 @@ class PathToRegexGenerator {
    */
   tokensToFunction(tokens: Tokens[]) {
     // Compile all the tokens into regexps.
-    const matches = new Array(tokens.length);
+    const matches = new Array(tokens.length)
 
     // Compile all the patterns before compilation.
     for (let i = 0; i < tokens.length; i++) {
-      const current = tokens[i];
-      if (typeof current === "object") {
-        matches[i] = new RegExp("^(?:" + current.pattern + ")$");
+      const current = tokens[i]
+      if (typeof current === 'object') {
+        matches[i] = new RegExp('^(?:' + current.pattern + ')$')
       }
     }
 
-    return function (data?: Object, options?: PathFunctionOptions) {
-      let path = "";
-      let encode = (options && options.encode) || encodeURIComponent;
+    return function (data?: any, options?: PathFunctionOptions) {
+      let path = ''
+      let encode = (options && options.encode) || encodeURIComponent
 
       for (let i = 0; i < tokens.length; i++) {
-        let token = tokens[i];
+        let token = tokens[i]
 
-        if (typeof token === "string") {
-          path += token;
-          continue;
+        if (typeof token === 'string') {
+          path += token
+          continue
         }
 
-        let value = data ? data[token.name] : undefined;
-        let segment;
+        let value = data ? data[token.name] : undefined
+        let segment
 
         if (Array.isArray(value)) {
           if (!token.repeat) {
-            throw new TypeError(
-              'Expected "' + token.name + '" to not repeat, but got array'
-            );
+            throw new TypeError('Expected "' + token.name + '" to not repeat, but got array')
           }
 
           if (value.length === 0) {
-            if (token.optional) continue;
+            if (token.optional) continue
 
-            throw new TypeError(
-              'Expected "' + token.name + '" to not be empty'
-            );
+            throw new TypeError('Expected "' + token.name + '" to not be empty')
           }
 
           for (let j = 0; j < value.length; j++) {
-            segment = encode(value[j], token);
+            segment = encode(value[j], token)
 
             if (!matches[i].test(segment)) {
-              throw new TypeError(
-                'Expected all "' +
-                  token.name +
-                  '" to match "' +
-                  token.pattern +
-                  '"'
-              );
+              throw new TypeError('Expected all "' + token.name + '" to match "' + token.pattern + '"')
             }
 
-            path += (j === 0 ? token.prefix : token.delimiter) + segment;
+            path += (j === 0 ? token.prefix : token.delimiter) + segment
           }
 
-          continue;
+          continue
         }
 
-        if (
-          typeof value === "string" ||
-          typeof value === "number" ||
-          typeof value === "boolean"
-        ) {
-          segment = encode(String(value), token);
+        if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+          segment = encode(String(value), token)
 
           if (!matches[i].test(segment)) {
             throw new TypeError(
-              'Expected "' +
-                token.name +
-                '" to match "' +
-                token.pattern +
-                '", but got "' +
-                segment +
-                '"'
-            );
+              'Expected "' + token.name + '" to match "' + token.pattern + '", but got "' + segment + '"'
+            )
           }
 
-          path += token.prefix + segment;
-          continue;
+          path += token.prefix + segment
+          continue
         }
 
         if (token.optional) {
           // Prepend partial segment prefixes.
-          if (token.partial) path += token.prefix;
+          if (token.partial) path += token.prefix
 
-          continue;
+          continue
         }
 
-        throw new TypeError(
-          'Expected "' +
-            token.name +
-            '" to be ' +
-            (token.repeat ? "an array" : "a string")
-        );
+        throw new TypeError('Expected "' + token.name + '" to be ' + (token.repeat ? 'an array' : 'a string'))
       }
 
-      return path;
-    };
+      return path
+    }
   }
 
   /**
@@ -390,9 +344,9 @@ class PathToRegexGenerator {
    */
   private escapeString(str: string | null) {
     if (str === null) {
-      str = "";
+      str = ''
     }
-    return str.replace(/([.+*?=^!:${}()[\]|/\\])/g, "\\$1");
+    return str.replace(/([.+*?=^!:${}()[\]|/\\])/g, '\\$1')
   }
 
   /**
@@ -402,7 +356,7 @@ class PathToRegexGenerator {
    * @return {string}
    */
   private escapeGroup(group: string) {
-    return group.replace(/([=!:$/()])/g, "\\$1");
+    return group.replace(/([=!:$/()])/g, '\\$1')
   }
 
   /**
@@ -412,8 +366,8 @@ class PathToRegexGenerator {
    * @return {string}
    */
   private flags(options?: { sensitive?: boolean }) {
-    return options && options.sensitive ? "" : "i";
+    return options && options.sensitive ? '' : 'i'
   }
 }
 
-export const pathToRegexp = new PathToRegexGenerator();
+export const pathToRegexp = new PathToRegexGenerator()
